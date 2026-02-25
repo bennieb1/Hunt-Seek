@@ -14,4 +14,16 @@ class GRAPHICSPROGFPS_2026_API AFPSGameModeBase : public AGameModeBase
 
 	virtual void StartPlay() override;
 	
+public:
+
+	void NotifyEnemyKilled(AController* Killer);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WinCondition")
+	int32 AliveEnemies = 0;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WinCondition")
+	bool bGameOverTriggered = false;
+
+
+
 };

@@ -46,39 +46,64 @@ void APickupBase::Tick(float DeltaTime)
 */
 void APickupBase::InitializePickup()
 {
-	if (PickupDataTable && !PickupItemID.IsNone())
+	const FSoftObjectPath TablePath = PickupDataTable.ToSoftObjectPath();
+	if (!TablePath.IsNull() && !PickupItemID.IsNone())
 	{
-		// Retrieve the item data associated with this pickup from the Data Table
-		const FItemData* ItemDataRow = PickupDataTable->FindRow<FItemData>(PickupItemID, PickupItemID.ToString());
+		/* Resolve the table soft reference into a usable data table.
+		   Use the loaded table if available; otherwise load it now. */
+		UDataTable* LoadedDataTable = PickupDataTable.IsValid()
+			? PickupDataTable.Get()
+			: PickupDataTable.LoadSynchronous();
 
-		ReferenceItem = NewObject<UItemDefinition>(this, UItemDefinition::StaticClass());
-
-		ReferenceItem->ID = ItemDataRow->ID;
-		ReferenceItem->ItemType = ItemDataRow->ItemType;
-		ReferenceItem->ItemText = ItemDataRow->ItemText;
-		ReferenceItem->WorldMesh = ItemDataRow->ItemBase->WorldMesh;
-
-		UItemDefinition* TempItemDefinition = ItemDataRow->ItemBase.Get();
-
-		
-
-		// Check if the mesh is currently loaded by calling IsValid().
-		if (TempItemDefinition->WorldMesh.IsValid()) {
-			// Set the pickup's mesh to the associated item's mesh
-			PickupMeshComponent->SetStaticMesh(TempItemDefinition->WorldMesh.Get());
-		}
-		else {
-			// If the mesh isn't loaded, load it by calling LoadSynchronous().
-			UStaticMesh* WorldMesh = TempItemDefinition->WorldMesh.LoadSynchronous();
-			PickupMeshComponent->SetStaticMesh(WorldMesh);
+		// Continue only if the DataTable was successfully loaded 
+		if (!LoadedDataTable)
+		{
+			return;
 		}
 
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("Picked up Object"));
-		// Set the mesh to visible and collidable.
+		// Use the pickup ID to look up and save the corresponding table row 
+		const FItemData* ItemDataRow = LoadedDataTable->FindRow<FItemData>(PickupItemID, PickupItemID.ToString());
+
+		// Continue only if the row was found 
+		if (!ItemDataRow)
+		{
+			return;
+		}
+
+		/* Resolve the Data Asset referenced by this table row.
+		Use the Data Asset if available; otherwise load it now.   */
+		UItemDefinition* TempItemDefinition = ItemDataRow->ItemBase.IsValid()
+			? ItemDataRow->ItemBase.Get()
+			: ItemDataRow->ItemBase.LoadSynchronous();
+
+		// Continue only if the Data Asset was successfully loaded 
+		if (!TempItemDefinition)
+		{
+			return;
+		}
+
+		// Create a copy of the item with this class as the owner
+		ReferenceItem = TempItemDefinition->CreateItemCopy(this);
+
+		// Resolve the item's world mesh from the item definition.
+		// This uses the mesh if it’s already in memory, or loads it if it isn’t.
+		UStaticMesh* LoadedMesh = TempItemDefinition->WorldMesh.IsValid()
+			? TempItemDefinition->WorldMesh.Get()
+			: TempItemDefinition->WorldMesh.LoadSynchronous();
+
+		// Check the mesh is set and can load before using it
+		if (LoadedMesh)
+		{
+			// Set the pickup's mesh
+			PickupMeshComponent->SetStaticMesh(LoadedMesh);
+
+		}
+
+		// Restore visibility after respawning
 		PickupMeshComponent->SetVisibility(true);
+		// Restore collision after respawning 
 		SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-
-		// Register the Overlap Event
+	
 		SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &APickupBase::OnSphereBeginOverlap);
 	}
 }
@@ -133,6 +158,8 @@ void APickupBase::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 	AFPSCharacter* Character = Cast<AFPSCharacter>(OtherActor);
 	if (Character)
 	{
+
+		Character->GiveItem(ReferenceItem);
 
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("Picked up Object"));
 		SphereComponent->OnComponentBeginOverlap.RemoveAll(this);

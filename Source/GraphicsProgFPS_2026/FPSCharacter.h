@@ -11,9 +11,16 @@
 #include "FPSCharacter.generated.h"
 
 class UAnimBlueprint;
+class UUserWidget;
 class UInputMappingContext;
 class UInputAction;
 class UInputComponent;
+
+class UItemDefinition;
+class AEquippableToolBase;
+class UEquippableToolDefinition;
+class UInventoryComponent;
+
 
 UCLASS()
 class GRAPHICSPROGFPS_2026_API AFPSCharacter : public ACharacter
@@ -26,6 +33,37 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = Animation)
 	TObjectPtr<UAnimBlueprint> FirstPersonDefaultAnim;
+
+	UPROPERTY(VisibleAnywhere, Category = "Inventory")
+	TObjectPtr<UInventoryComponent> InventoryComponent;
+
+	UFUNCTION()
+	bool IsToolAlreadyOwned(UEquippableToolDefinition* ToolDefinition);
+
+	UFUNCTION()
+	void AttachTool(UEquippableToolDefinition* ToolDefinition);
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> HudClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> PauseMenuClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> MainMenuClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> PauseAction;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> HudWidget;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> PauseWidget;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> MainMenuWidget;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -43,6 +81,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	TObjectPtr<UInputAction> LookAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> UseAction;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tools")
+	TObjectPtr<AEquippableToolBase> EquippedTool;
+
+
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -55,6 +101,24 @@ public:
 
 	UFUNCTION()
 	void Look(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void Use(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void GiveItem(UItemDefinition* ItemDefinition);
+
+	UFUNCTION()
+	FVector GetCameraTargetLocation();
+
+	UFUNCTION()
+	void TogglePauseMenu();
+
+	UFUNCTION()
+	void ShowHud();
+
+	UFUNCTION()
+	void ShowMainMenu();
 
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -71,5 +135,23 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = Mesh)
 	TObjectPtr<USkeletalMeshComponent> FirstPersonMeshComponent;
+
+	private:
+		void SetUIOnly(UUserWidget* Widget);
+		void SetGameOnly();
+
+		public: 
+
+		UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Health")
+		float MaxHealth = 100.f;
+
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+		float CurrentHealth = 100.f;
+
+		UFUNCTION(BlueprintCallable, Category = "Health")
+		void ApplyDamage(float Damage);
+
+		virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+			class AController* EventInstigator, AActor* DamageCauser) override;
 
 };
