@@ -26,6 +26,15 @@ void UMainMenuWidget::NativeConstruct()
 void UMainMenuWidget::OnPlayClicked()
 {
 
+    APlayerController* PC = GetOwningPlayer();
+    if (PC)
+    {
+        PC->bShowMouseCursor = false;
+
+        FInputModeGameOnly Mode;
+        PC->SetInputMode(Mode);
+    }
+
     UGameplayStatics::OpenLevel(this, FName("MainLevel"));
 
 }
