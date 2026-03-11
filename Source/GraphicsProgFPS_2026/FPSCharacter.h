@@ -64,6 +64,12 @@ public:
 	UPROPERTY()
 	TObjectPtr<UUserWidget> MainMenuWidget;
 
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	float GetCurrentHealth() const { return CurrentHealth; }
+
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	float GetMaxHealth() const { return MaxHealth; }
+
 
 protected:
 	// Called when the game starts or when spawned

@@ -56,7 +56,7 @@ void AFPSGameModeBase::NotifyEnemyKilled(AController* Killer)
 		}
 
 		const float FinalTime = PC->GetElapsedHudTimeSeconds();
-		PC->ShowGameOver(FinalTime);
+		PC->ShowGameOver(FinalTime, true);
 	}
 
 }

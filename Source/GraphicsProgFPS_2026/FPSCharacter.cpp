@@ -381,14 +381,12 @@ void AFPSCharacter::TogglePauseMenu()
 
 void AFPSCharacter::ApplyDamage(float Damage)
 {
-
 	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.f, MaxHealth);
 
 	if (AFPSPlayerController* PC = Cast<AFPSPlayerController>(GetController()))
 	{
 		PC->SetHUDHealth(CurrentHealth, MaxHealth);
 	}
-
 }
 
 float AFPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)

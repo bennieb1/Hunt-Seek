@@ -34,6 +34,11 @@ AFirstPersonProjectile::AFirstPersonProjectile()
 
 	CollisionComponent->OnComponentHit.AddDynamic(this, &AFirstPersonProjectile::OnHit);
 
+	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	CollisionComponent->SetCollisionObjectType(ECC_GameTraceChannel2); // example: EnemyProjectile
+	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Block);
+	CollisionComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); // example: Enemy
+
 	RootComponent = CollisionComponent;
 
 	ProjectileMovement->UpdatedComponent = CollisionComponent;
@@ -53,6 +58,28 @@ AFirstPersonProjectile::AFirstPersonProjectile()
 void AFirstPersonProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Ignore the actor that fired this projectile
+	if (AActor* MyOwner = GetOwner())
+	{
+		CollisionComponent->IgnoreActorWhenMoving(MyOwner, true);
+
+		if (ProjectileMesh)
+		{
+			ProjectileMesh->IgnoreActorWhenMoving(MyOwner, true);
+		}
+	}
+
+	// Also ignore instigator if valid
+	if (APawn* MyInstigator = GetInstigator())
+	{
+		CollisionComponent->IgnoreActorWhenMoving(MyInstigator, true);
+
+		if (ProjectileMesh)
+		{
+			ProjectileMesh->IgnoreActorWhenMoving(MyInstigator, true);
+		}
+	}
 	
 }
 

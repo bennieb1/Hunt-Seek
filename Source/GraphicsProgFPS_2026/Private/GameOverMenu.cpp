@@ -21,3 +21,13 @@ void UGameOverMenu::SetFinalTimeSeconds(float Seconds)
 	}
 
 }
+
+void UGameOverMenu::SetResultMessage(const FString& Message)
+{
+
+	if (ResultText)
+	{
+		ResultText->SetText(FText::FromString(Message));
+	}
+
+}

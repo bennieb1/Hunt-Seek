@@ -20,8 +20,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetFinalTimeSeconds(float Seconds);
 
+	UFUNCTION(BlueprintCallable)
+	void SetResultMessage(const FString& Message);
+
 protected:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* FinalTimeText;
+
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ResultText;
 	
 };

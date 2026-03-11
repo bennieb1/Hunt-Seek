@@ -4,7 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-
+#include "../FPSCharacter.h"
 #include "HudMenu.h"
 #include "GameOverMenu.h"
 
@@ -39,6 +39,14 @@ void AFPSPlayerController::SetupInputComponent()
 			EIC->BindAction(PauseAction, ETriggerEvent::Started, this, &AFPSPlayerController::TogglePauseMenu);
 		}
 	}
+}
+
+void AFPSPlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	CheckPlayerDeath();
+
 }
 
 void AFPSPlayerController::ShowMainMenu()
@@ -127,6 +135,23 @@ void AFPSPlayerController::UpdateHudTime()
 	HudWidget->SetElapsedTime(Elapsed);
 }
 
+void AFPSPlayerController::CheckPlayerDeath()
+{
+
+	if (bGameOverShown) return;
+	if (UGameplayStatics::IsGamePaused(this)) return;
+
+	AFPSCharacter* FPSCharacter = Cast<AFPSCharacter>(GetPawn());
+	if (!FPSCharacter) return;
+
+	if (FPSCharacter->GetCurrentHealth() <= 0.f)
+	{
+		const float FinalTime = GetElapsedHudTimeSeconds();
+		ShowGameOver(FinalTime, false);
+	}
+
+}
+
 void AFPSPlayerController::AddScore(int32 Amount)
 {
 	CurrentScore += Amount;
@@ -197,9 +222,11 @@ void AFPSPlayerController::ResumeFromPause()
 	SetGameOnly();
 }
 
-void AFPSPlayerController::ShowGameOver(float FinalTimeSeconds)
+void AFPSPlayerController::ShowGameOver(float FinalTimeSeconds, bool bPlayerWon)
 {
-	// Freeze HUD time updates (so time "stops" even before pause)
+	if (bGameOverShown) return;
+	bGameOverShown = true;
+
 	if (GetWorld())
 	{
 		GetWorld()->GetTimerManager().ClearTimer(HudTimeTimerHandle);
@@ -211,7 +238,6 @@ void AFPSPlayerController::ShowGameOver(float FinalTimeSeconds)
 	{
 		if (!GameOverWidget)
 		{
-			// ✅ Proper typed CreateWidget call
 			GameOverWidget = CreateWidget<UGameOverMenu>(this, GameOverClass);
 		}
 
@@ -223,6 +249,7 @@ void AFPSPlayerController::ShowGameOver(float FinalTimeSeconds)
 		if (GameOverWidget)
 		{
 			GameOverWidget->SetFinalTimeSeconds(FinalTimeSeconds);
+			GameOverWidget->SetResultMessage(bPlayerWon ? TEXT("You Win") : TEXT("You Lose"));
 		}
 	}
 

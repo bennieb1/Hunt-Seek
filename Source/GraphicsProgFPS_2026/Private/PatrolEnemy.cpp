@@ -128,6 +128,7 @@ void APatrolEnemy::FireOnce()
 	FActorSpawnParameters Params;
 	Params.Owner = this;
 	Params.Instigator = this;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	AFirstPersonProjectile* Proj = GetWorld()->SpawnActor<AFirstPersonProjectile>(
 		ProjectileClass, SpawnLoc, SpawnRot, Params
@@ -136,6 +137,14 @@ void APatrolEnemy::FireOnce()
 	if (Proj)
 	{
 		Proj->Damage = ProjectileDamage;
+
+		// Extra safety: ignore the enemy who fired it
+		Proj->SetOwner(this);
+
+		if (Proj->GetInstigator() == nullptr)
+		{
+			Proj->SetInstigator(this);
+		}
 	}
 
 }

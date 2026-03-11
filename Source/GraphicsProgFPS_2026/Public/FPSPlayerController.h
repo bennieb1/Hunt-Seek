@@ -11,6 +11,7 @@ class UInputAction;
 class UInputMappingContext;
 class UHudMenu;
 class UGameOverMenu;
+class FPSCharacter;
 
 /**
  * 
@@ -23,6 +24,7 @@ class GRAPHICSPROGFPS_2026_API AFPSPlayerController : public APlayerController
 public:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	virtual void Tick(float DeltaSeconds) override;
 
 	// ---------- UI Classes (assign in BP defaults) ----------
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
@@ -83,7 +85,7 @@ public:
 
 	// ---------- Game Over ----------
 	UFUNCTION(BlueprintCallable, Category = "UI")
-	void ShowGameOver(float FinalTimeSeconds);
+	void ShowGameOver(float FinalTimeSeconds, bool bPlayerWon);
 
 private:
 	// Widget instances (ONE of each)
@@ -102,6 +104,7 @@ private:
 	// State
 	bool bMainMenuOpen = false;
 	bool bPauseMenuOpen = false;
+	bool bGameOverShown = false;
 
 	// Score/time
 	int32 CurrentScore = 0;
@@ -110,6 +113,7 @@ private:
 
 	// Helpers
 	void UpdateHudTime();
+	void CheckPlayerDeath();
 
 	void SetUIOnly(UUserWidget* FocusWidget);
 	void SetGameOnly();
